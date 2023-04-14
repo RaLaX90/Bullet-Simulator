@@ -8,9 +8,9 @@ int main(int argc, char* argv[])
 
     while (game.GetState() == Game::State::STATE_OK)
     {
-        //game.Update();
+        game.Update();
         game.HandleEvents();
-        //game.DrawAll();
+        game.DrawAll();
     }
 
     return 0;

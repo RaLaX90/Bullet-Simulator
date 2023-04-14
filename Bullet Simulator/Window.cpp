@@ -4,13 +4,13 @@ Window* Window::m_window = nullptr;
 
 // _width - playing field m_screen_width (x)
 // _height - m_screen_height of the playing field (y)
-Window::Window(short _width, short _height, short _map_width, short _map_height) :
-	m_screen_width(_width), m_screen_height(_height), m_map_width(_map_width), m_map_height(_map_height) {
+Window::Window(short screen_width, short screen_height, short map_width, short map_height) :
+	m_screen_width(screen_width), m_screen_height(screen_height), m_map_width(map_width), m_map_height(map_height) {
 
-	m_top_border_Y = (m_screen_height / 2) - (m_map_height / 2);
-	m_left_border_X = (m_screen_width / 2) - (m_map_width / 2);
-	m_bottom_border_Y = (m_screen_height / 2) + (m_map_height / 2);
-	m_right_border_X = (m_screen_width / 2) + (m_map_width / 2);
+	//m_top_border_Y = (m_screen_height / 2) - (m_map_height / 2);
+	//m_left_border_X = (m_screen_width / 2) - (m_map_width / 2);
+	//m_bottom_border_Y = (m_screen_height / 2) + (m_map_height / 2);
+	//m_right_border_X = (m_screen_width / 2) + (m_map_width / 2);
 
 	m_sdl_window = SDL_CreateWindow("Bullet Simulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_screen_width, m_screen_height,
 		m_screen_width == m_map_width && m_screen_height == m_map_height ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE
@@ -30,10 +30,10 @@ Window::~Window() {
 	SDL_DestroyWindow(m_sdl_window);
 }
 
-Window* Window::GetInstance(short _width, short _height, short _map_width, short _map_height)
+Window* Window::GetInstance(short screen_width, short screen_height, short map_width, short map_height)
 {
 	if (m_window == nullptr) {
-		m_window = new Window(_width, _height, _map_width, _map_height);
+		m_window = new Window(screen_width, screen_height, map_width, map_height);
 	}
 	return m_window;
 }
@@ -58,25 +58,25 @@ unsigned short Window::GetMapHeight() const
 	return m_map_height;
 }
 
-unsigned short Window::GetTopBorderY() const
-{
-	return m_top_border_Y;
-}
-
-unsigned short Window::GetLeftBorderX() const
-{
-	return m_left_border_X;
-}
-
-unsigned short Window::GetBottomBorderY() const
-{
-	return m_bottom_border_Y;
-}
-
-unsigned short Window::GetRightBorderX() const
-{
-	return m_right_border_X;
-}
+//unsigned short Window::GetTopBorderY() const
+//{
+//	return m_top_border_Y;
+//}
+//
+//unsigned short Window::GetLeftBorderX() const
+//{
+//	return m_left_border_X;
+//}
+//
+//unsigned short Window::GetBottomBorderY() const
+//{
+//	return m_bottom_border_Y;
+//}
+//
+//unsigned short Window::GetRightBorderX() const
+//{
+//	return m_right_border_X;
+//}
 
 SDL_Renderer* Window::GetRenderer() const
 {
