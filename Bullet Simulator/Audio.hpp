@@ -1,9 +1,9 @@
 #pragma once
 
+#include <SDL_mixer.h>
+
 #include <array>
 #include <string>
-
-#include <SDL_mixer.h>
 
 class Audio
 {

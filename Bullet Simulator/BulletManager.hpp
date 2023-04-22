@@ -1,18 +1,24 @@
 #pragma once
 
 #include <SDL.h>
-#include "Bullet.hpp"
 
 #include <memory>
 #include <vector>
 
+#include "Bullet.hpp"
+#include "Window.hpp"
+#include "Line.hpp"
+
 class BulletManager
 {
 private:
-	std::vector<std::unique_ptr<Bullet>> bullets{ 10, nullptr };
+	std::vector<std::unique_ptr<Bullet>> bullets{ };
+	const std::vector<std::unique_ptr<Line>>* lines;
+
+	int m_elements_count;
 
 public:
-	BulletManager();
+	BulletManager(int elements_count, const std::vector<std::unique_ptr<Line>>* lines);
 	~BulletManager();
 
 	void Update(float time);

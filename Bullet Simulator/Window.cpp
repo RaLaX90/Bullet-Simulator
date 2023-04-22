@@ -19,7 +19,9 @@ Window::Window(short screen_width, short screen_height, short map_width, short m
 		throw "Error at window create";
 	}
 
-	m_renderer = SDL_CreateRenderer(m_sdl_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	m_renderer = SDL_CreateRenderer(m_sdl_window, -1, SDL_RENDERER_ACCELERATED 
+		//| SDL_RENDERER_PRESENTVSYNC
+	);
 	if (m_renderer == nullptr) {
 		throw "Error at renderer create";
 	}
@@ -35,6 +37,7 @@ Window* Window::GetInstance(short screen_width, short screen_height, short map_w
 	if (m_window == nullptr) {
 		m_window = new Window(screen_width, screen_height, map_width, map_height);
 	}
+
 	return m_window;
 }
 

@@ -1,9 +1,14 @@
 #include "Game.hpp"
 
-Game::Game()
+Game::Game(int elements_count) :
+	m_elements_count(elements_count)
 {
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-		throw "Error at sdl_init";
+		throw SDL_GetError();
+	}
+
+	if (TTF_Init() != 0) {
+		throw TTF_GetError();
 	}
 
 	//if (IMG_Init(IMG_INIT_PNG) != 0) {
@@ -11,11 +16,22 @@ Game::Game()
 	//}
 
 	state = STATE_OK;
-	//m_desired_fps = 60;
+	m_desired_fps = 60;
 
-	Window* window = Window::GetInstance(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT);
+	lineManager = std::make_unique<LineManager>(elements_count);
 
-	bulletManager = std::make_unique<BulletManager>();
+	bulletManager = std::make_unique<BulletManager>(
+		elements_count
+		, lineManager->GetLinesPointer()
+	);
+
+	m_fps_rect = SDL_Rect{ 10, 10, 100, 120 };
+
+	m_fps_font = TTF_OpenFont("../data/fonts/OpenSans-Bold.ttf", 400);
+	if (m_fps_font == nullptr)
+	{
+		throw TTF_GetError();
+	}
 
 	//m_generator = std::mt19937(m_rd());
 	//m_distribution_screen_width = std::uniform_int_distribution<short>(window->GetLeftBorderX(), window->GetRightBorderX());
@@ -27,27 +43,49 @@ Game::Game()
 
 Game::~Game()
 {
+	TTF_CloseFont(m_fps_font);
+	TTF_Quit();
+
 	//IMG_Quit();
 	SDL_Quit();
 }
 
-bool Game::isCollision(const SDL_Rect* object1, const SDL_Rect* object2) const
+void Game::DrawScore(SDL_Renderer* _renderer, int fps)
 {
-	return SDL_HasIntersection(object1, object2);
+	SDL_Surface* surfaceMessage = TTF_RenderText_Solid(m_fps_font, std::to_string(fps).c_str(), SDL_Color{ 200, 200, 200, 255 });
+
+	SDL_Texture* Message = SDL_CreateTextureFromSurface(_renderer, surfaceMessage);
+	if (Message == nullptr) {
+		throw SDL_GetError();
+	}
+
+	SDL_FreeSurface(surfaceMessage);
+
+	SDL_RenderCopy(_renderer, Message, NULL, &m_fps_rect);
+
+	SDL_DestroyTexture(Message);
 }
 
-void Game::Update()
+bool Game::isCollision(const SDL_FRect* bullet_coordinate, FLineCoordinate* line_coordinate) const
 {
-	current_time = SDL_GetTicks();
+	return SDL_IntersectFRectAndLine(bullet_coordinate, &line_coordinate->X1, &line_coordinate->X2, &line_coordinate->Y1, &line_coordinate->Y2);
+}
 
-	bulletManager->Update();
+void Game::Fire(SDL_FPoint start_position, SDL_FPoint dirrection, float speed, float shot_time, float life_time)
+{
+	bulletManager->Fire(start_position, dirrection, speed, shot_time, life_time);
+}
 
-	// Clamping FPS.
-	if (1000 / m_desired_fps > (SDL_GetTicks() - current_time)) {
-		m_actual_fps = 1000 / m_desired_fps - (SDL_GetTicks() - current_time);
+void Game::AddLines(unsigned short window_center_X, unsigned short window_center_Y)
+{
+	//for (int i = 0; i < 10; ++i) {
+		lineManager->AddNewLine(FLineCoordinate{ 500.0F, 500.0F, 800.0F, 800.0F });
+	//}
+}
 
-		SDL_Delay(m_actual_fps);
-	}
+void Game::Update(float elapsed_secs)
+{
+	bulletManager->Update(elapsed_secs);
 }
 
 void Game::HandleEvents()
@@ -79,17 +117,18 @@ void Game::HandleEvents()
 	}
 }
 
-void Game::DrawAll()
+void Game::DrawAll(int fps)
 {
 	Window* window = Window::GetInstance(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	SDL_SetRenderDrawColor(window->GetRenderer(), 0x00, 0x00, 0x00, 0x00);
-	// Clear Scene
-	SDL_RenderClear(window->GetRenderer());
-
+	SDL_RenderClear(window->GetRenderer()); // Clear Scene
 	SDL_SetRenderDrawColor(window->GetRenderer(), 0xFF, 0xFF, 0xFF, 0xFF);
 
 	bulletManager->DrawAllBullets(window->GetRenderer());
+	lineManager->DrawAllLines(window->GetRenderer());
+
+	this->DrawScore(window->GetRenderer(), fps);
 
 	SDL_RenderPresent(window->GetRenderer());
 }
