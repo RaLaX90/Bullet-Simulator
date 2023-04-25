@@ -5,8 +5,9 @@
 #include <array>
 #include <string>
 
-class Audio
+class Audio // singleton "audio" class
 {
+private:
 	Audio();
 	~Audio();
 
@@ -29,9 +30,10 @@ public:
 
 	enum class EffectType
 	{
-		hit_paddle,
-		score_up,
-		ball_speed
+		wall_hit,
+		wall_destroy,
+		bullet_appear,
+		bullet_disappear
 	};
 
 	enum class Music

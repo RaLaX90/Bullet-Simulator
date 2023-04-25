@@ -1,43 +1,40 @@
 //#include <iostream>
+//#include <chrono>
+//#include <thread>
 
 #include "Game.hpp"
 
-#include "Global.hpp"
-
 int main(int argc, char* argv[])
 {
-	Game game(10);
+	int NumberOfBulletsAndWalls = 10;
 
-	game.AddLines(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
-	game.Fire(SDL_FPoint{ WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 }, SDL_FPoint{ -100, -100 }, 1.0F, 0.0F, 0.0F);
+	Game game{ NumberOfBulletsAndWalls }; // parameter (int) - how bullets and walls you want
 
-	int frameCount = 0, fps = 0;
-	float timerFPS = 0;
+	//  Well, thats work, but after some time - freeze:( If you wanna to try it - uncomment code below, uncomment #include "iostream", 
+	//	"chrono" and "thread" and comment "AddBullets()" function in "Game" class constructor.
+	//	Meanwhile, program perfectly work in synchronous mode.
+	//{
+	//	Window* window = Window::GetInstance(MAP_WIDTH, MAP_HEIGHT);
 
-	uint32_t begin = SDL_GetTicks(), end;
-	float elapsed_secs;
+	//	std::jthread thr{ [&] {
+	//		for (int i = 0; i < NumberOfBulletsAndWalls; ++i) {
+	//			game.Fire(window->GetRenderer(), SDL_FPoint{ (MAP_WIDTH / 2) - 7.5F, (MAP_HEIGHT / 2) - 7.5F }, SDL_FPoint{ 100, 60 }, 0.4F, 0.0F, 3.0F);
+	//			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	//			std::cout << std::this_thread::get_id() << std::endl;
+	//	}
+	//	} };
+	//	thr.detach();
+	//}
+
 
 	while (game.GetState() == Game::State::STATE_OK)
 	{
-		end = SDL_GetTicks();
-		elapsed_secs = (end - begin) / 1000.0F;
-		begin = end;
-
-		timerFPS += elapsed_secs;
-
-		//std::cout << timerFPS << std::endl;
-
-		frameCount++;
-		if (timerFPS > 1.0F) {
-			fps = frameCount;
-			frameCount = 0;
-			timerFPS = 0;
-		}
-
-		game.Update(elapsed_secs);
+		game.CalculateFPS();
+		game.Update();
 		game.HandleEvents();
-		game.DrawAll(fps);
+		game.DrawAll();
 	}
+
 
 	return 0;
 }

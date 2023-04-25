@@ -1,12 +1,12 @@
 #include "Bullet.hpp"
 
-Bullet::Bullet(SDL_Renderer* _renderer, const SDL_FRect& position_and_size, const SDL_FPoint& direction, const float& speed, const float& time_to_appearse, const float& life_time):
+Bullet::Bullet(const SDL_Renderer* _renderer, const SDL_FRect& position_and_size, const SDL_FPoint& direction, const float& speed, const float& time_to_appearse, const float& life_time) :
 	position_and_size(position_and_size), direction(direction), speed(speed), time_to_appearse(time_to_appearse), life_time(life_time)
 {
-	this->image = IMG_LoadTexture(_renderer, "../data/icons/bullet.png");
+	this->image = IMG_LoadTexture(const_cast<SDL_Renderer*>(_renderer), "../data/icons/bullet.png");
 	if (!image)
 	{
-		throw "Error at load image";
+		throw IMG_GetError();
 	}
 }
 
@@ -21,10 +21,43 @@ void Bullet::Update(float time)
 	position_and_size.y += direction.y * (speed * time);
 }
 
-void Bullet::Draw(SDL_Renderer* m_renderer) const
+void Bullet::Draw(const SDL_Renderer* m_renderer) const
 {
-	if (SDL_RenderCopyF(m_renderer, image, nullptr, &position_and_size))  //0 is a success
-	{
-		throw SDL_GetError();
-	}
+	SDL_RenderCopyF(const_cast<SDL_Renderer*>(m_renderer), image, nullptr, &position_and_size);
+
+	// commented for optimization
+	//if (SDL_RenderCopyF(const_cast<SDL_Renderer*>(m_renderer), image, nullptr, &position_and_size))  //0 is a success
+	//{
+	//	throw SDL_GetError();
+	//}
+}
+
+const SDL_FRect* Bullet::GetPositionAndSizePointer() const
+{
+	return &position_and_size;
+}
+
+void Bullet::SetDirectionX(float new_direction_x)
+{
+	this->direction.x = new_direction_x;
+}
+
+void Bullet::SetDirectionY(float new_direction_y)
+{
+	this->direction.y = new_direction_y;
+}
+
+SDL_FPoint Bullet::GetDirection() const
+{
+	return direction;
+}
+
+void Bullet::SetLifeTime(float life_time)
+{
+	this->life_time = life_time;
+}
+
+float Bullet::GetLifeTime() const
+{
+	return life_time;
 }

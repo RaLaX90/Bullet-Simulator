@@ -1,27 +1,39 @@
 #pragma once
 
-#include <SDL.h>
+//#include <SDL.h>
 
-#include <memory>
-#include <vector>
+//#include <memory>
+//#include <vector>
+//#include <cmath>
+#include <random>
 
 #include "Bullet.hpp"
 #include "Window.hpp"
-#include "Line.hpp"
+#include "Wall.hpp"
+
+#include "Global.hpp"
 
 class BulletManager
 {
 private:
-	std::vector<std::unique_ptr<Bullet>> bullets{ };
-	const std::vector<std::unique_ptr<Line>>* lines;
+	std::vector<std::unique_ptr<Bullet>> bullets;
+	const std::vector<std::unique_ptr<Wall>>* walls;
 
-	int m_elements_count;
+	std::random_device m_rd;
+	std::mt19937 m_generator;												// generator for distribution
+	std::uniform_real_distribution<float> m_distribution_bullet_direction_X;	// object for random distribution of m_screen_width
+	std::uniform_real_distribution<float> m_distribution_bullet_direction_Y;	// object for random distribution of m_screen_height
+
+	bool isCollision(const SDL_FRect* bullet_coordinate, const FWallCoordinate* wall_coordinate) const;
 
 public:
-	BulletManager(int elements_count, const std::vector<std::unique_ptr<Line>>* lines);
+	BulletManager(int elements_count, const std::vector<std::unique_ptr<Wall>>* walls);
 	~BulletManager();
 
+	void AddBullets();
+
+	void Fire(const SDL_Renderer* _renderer, SDL_FPoint pos, SDL_FPoint dir, float speed, float time, float life_time);
+
 	void Update(float time);
-	void Fire(SDL_FPoint pos, SDL_FPoint dir, float speed, float time, float life_time);
-	void DrawAllBullets(SDL_Renderer* m_renderer);
+	void DrawAll(const SDL_Renderer* m_renderer) const;
 };

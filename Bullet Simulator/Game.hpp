@@ -1,17 +1,15 @@
 #pragma once
 
 #include <SDL.h>
-#include <SDL_image.h>
 #include <SDL_ttf.h>
-//#include <SDL_mixer.h>
 
-//#include <random>
 #include <memory>
+#include <string>
 
 #include "Window.hpp"
-#include "Audio.hpp"
+//#include "Audio.hpp"
 #include "BulletManager.hpp"
-#include "LineManager.hpp"
+#include "WallManager.hpp"
 
 #include "Global.hpp"
 
@@ -25,45 +23,36 @@ public:
 	};
 
 private:
-	State state;
+	State m_state;
 
-	std::uint64_t current_time, last_update;
+	std::unique_ptr<BulletManager> m_bulletManager;
+	std::unique_ptr<WallManager> m_wallManager;
 
-	std::unique_ptr<BulletManager> bulletManager;
-	std::unique_ptr<LineManager> lineManager;
+	SDL_Event m_event;
 
-	SDL_Event event;
+	unsigned int m_frameCount = 0, m_actualFPS = 0;
+	float m_timerFPS = 0;
 
-	uint16_t m_actual_fps;		// current FPS.
-	uint8_t m_desired_fps;		// The desired FPS for the game.
+	uint32_t m_begin = SDL_GetTicks(), m_end;
+	float m_elapsed_secs;
 
-	unsigned char m_fps;
 	TTF_Font* m_fps_font;
 	SDL_Rect m_fps_rect;
 
 	int m_elements_count;
 
-	//std::random_device m_rd;
-	//std::mt19937 m_generator;											// generator for distribution
-	//std::uniform_int_distribution<short> m_distribution_screen_width;	// object for random distribution of m_screen_width
-	//std::uniform_int_distribution<short> m_distribution_screen_height;	// object for random distribution of m_screen_height
-
-	//std::uniform_int_distribution<short> m_distribution_direction_x;
-	//std::uniform_int_distribution<short> m_distribution_direction_y;
-
-	void DrawScore(SDL_Renderer* _renderer, int fps);
-	bool isCollision(const SDL_FRect* bullet_coordinate, FLineCoordinate* line_coordinate) const;
+	void DrawFPS(const SDL_Renderer* _renderer);
 
 public:
 	Game(int elements_count);
 	~Game();
 
-	void Fire(SDL_FPoint start_position, SDL_FPoint dirrection, float speed, float shot_time, float life_time);
-	void AddLines(unsigned short window_center_X, unsigned short window_center_Y);
+	void Fire(const SDL_Renderer* _renderer, SDL_FPoint pos, SDL_FPoint dir, float speed, float time, float life_time);
 
-	void Update(float elapsed_secs);
+	void CalculateFPS();
+	void Update();
 	void HandleEvents();
-	void DrawAll(int fps);
+	void DrawAll();
 
 	State GetState() const;
 };

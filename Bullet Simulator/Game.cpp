@@ -1,44 +1,38 @@
 #include "Game.hpp"
 
+
 Game::Game(int elements_count) :
 	m_elements_count(elements_count)
 {
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+	if (SDL_Init(SDL_INIT_EVERYTHING)) {
 		throw SDL_GetError();
 	}
 
-	if (TTF_Init() != 0) {
+	if (TTF_Init()) {
 		throw TTF_GetError();
 	}
 
-	//if (IMG_Init(IMG_INIT_PNG) != 0) {
-	//	throw "Error at IMG_Init";
+	//if (IMG_Init(IMG_INIT_PNG)) {
+	//	throw IMG_GetError;
 	//}
 
-	state = STATE_OK;
-	m_desired_fps = 60;
+	m_state = STATE_OK;
 
-	lineManager = std::make_unique<LineManager>(elements_count);
+	m_wallManager = std::make_unique<WallManager>(elements_count);
+	m_wallManager->AddWalls();
 
-	bulletManager = std::make_unique<BulletManager>(
-		elements_count
-		, lineManager->GetLinesPointer()
+	m_bulletManager = std::make_unique<BulletManager>(
+		elements_count,
+		m_wallManager->GetWallsPointer()
 	);
+	m_bulletManager->AddBullets(); // This
 
 	m_fps_rect = SDL_Rect{ 10, 10, 100, 120 };
-
 	m_fps_font = TTF_OpenFont("../data/fonts/OpenSans-Bold.ttf", 400);
-	if (m_fps_font == nullptr)
+	if (m_fps_font == NULL)
 	{
 		throw TTF_GetError();
 	}
-
-	//m_generator = std::mt19937(m_rd());
-	//m_distribution_screen_width = std::uniform_int_distribution<short>(window->GetLeftBorderX(), window->GetRightBorderX());
-	//m_distribution_screen_height = std::uniform_int_distribution<short>(window->GetTopBorderY(), window->GetBottomBorderY());
-
-	//m_distribution_direction_x = std::uniform_int_distribution<short>(-5, 5);
-	//m_distribution_direction_y = std::uniform_int_distribution<short>(-5, 5);
 }
 
 Game::~Game()
@@ -50,57 +44,63 @@ Game::~Game()
 	SDL_Quit();
 }
 
-void Game::DrawScore(SDL_Renderer* _renderer, int fps)
+void Game::Fire(const SDL_Renderer* _renderer, SDL_FPoint pos, SDL_FPoint dir, float speed, float time, float life_time)
 {
-	SDL_Surface* surfaceMessage = TTF_RenderText_Solid(m_fps_font, std::to_string(fps).c_str(), SDL_Color{ 200, 200, 200, 255 });
+	m_bulletManager->Fire(_renderer, pos, dir, speed, time, life_time);
+}
 
-	SDL_Texture* Message = SDL_CreateTextureFromSurface(_renderer, surfaceMessage);
-	if (Message == nullptr) {
+void Game::DrawFPS(const SDL_Renderer* _renderer)
+{
+	SDL_Surface* surfaceMessage = TTF_RenderText_Solid(m_fps_font, std::to_string(this->m_actualFPS).c_str(), SDL_Color{ 200, 200, 200, 255 });
+
+	SDL_Texture* Message = SDL_CreateTextureFromSurface(const_cast<SDL_Renderer*>(_renderer), surfaceMessage);
+	if (Message == NULL) {
 		throw SDL_GetError();
 	}
 
 	SDL_FreeSurface(surfaceMessage);
 
-	SDL_RenderCopy(_renderer, Message, NULL, &m_fps_rect);
+	if (SDL_RenderCopy(const_cast<SDL_Renderer*>(_renderer), Message, NULL, &m_fps_rect)) {
+		throw SDL_GetError();
+	}
 
 	SDL_DestroyTexture(Message);
 }
 
-bool Game::isCollision(const SDL_FRect* bullet_coordinate, FLineCoordinate* line_coordinate) const
+void Game::CalculateFPS()
 {
-	return SDL_IntersectFRectAndLine(bullet_coordinate, &line_coordinate->X1, &line_coordinate->X2, &line_coordinate->Y1, &line_coordinate->Y2);
+	m_end = SDL_GetTicks();
+	m_elapsed_secs = (m_end - m_begin) / 1000.0F;	// miliseconds to seconds
+	m_begin = m_end;
+
+	m_timerFPS += m_elapsed_secs;
+
+	m_frameCount++;
+	if (m_timerFPS > 1.0F) { // fps refresh rate (by default = 1 second)
+		m_actualFPS = m_frameCount;
+		m_frameCount = 0;
+		m_timerFPS = 0;
+	}
 }
 
-void Game::Fire(SDL_FPoint start_position, SDL_FPoint dirrection, float speed, float shot_time, float life_time)
+void Game::Update()
 {
-	bulletManager->Fire(start_position, dirrection, speed, shot_time, life_time);
-}
-
-void Game::AddLines(unsigned short window_center_X, unsigned short window_center_Y)
-{
-	//for (int i = 0; i < 10; ++i) {
-		lineManager->AddNewLine(FLineCoordinate{ 500.0F, 500.0F, 800.0F, 800.0F });
-	//}
-}
-
-void Game::Update(float elapsed_secs)
-{
-	bulletManager->Update(elapsed_secs);
+	this->m_bulletManager->Update(this->m_elapsed_secs);
 }
 
 void Game::HandleEvents()
 {
-	while (SDL_PollEvent(&event)) {
-		switch (event.type)
+	while (SDL_PollEvent(&m_event)) {
+		switch (m_event.type)
 		{
-		case SDL_QUIT: {
-			state = STATE_EXIT;
+		case SDL_QUIT: {			// press "x" button on the top right 
+			m_state = STATE_EXIT;
 			break;
 		}
 		case SDL_KEYDOWN: {
-			switch (event.key.keysym.sym) {
-			case SDLK_ESCAPE: {
-				state = STATE_EXIT;
+			switch (m_event.key.keysym.sym) {
+			case SDLK_ESCAPE: {		// press escape button
+				m_state = STATE_EXIT;
 				break;
 			}
 			default: {
@@ -117,23 +117,23 @@ void Game::HandleEvents()
 	}
 }
 
-void Game::DrawAll(int fps)
+void Game::DrawAll()
 {
-	Window* window = Window::GetInstance(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT);
+	Window* window = Window::GetInstance(MAP_WIDTH, MAP_HEIGHT);
 
-	SDL_SetRenderDrawColor(window->GetRenderer(), 0x00, 0x00, 0x00, 0x00);
-	SDL_RenderClear(window->GetRenderer()); // Clear Scene
-	SDL_SetRenderDrawColor(window->GetRenderer(), 0xFF, 0xFF, 0xFF, 0xFF);
+	SDL_SetRenderDrawColor(const_cast<SDL_Renderer*>(window->GetRenderer()), 0x00, 0x00, 0x00, 0x00);	// paint background to black color
+	SDL_RenderClear(const_cast<SDL_Renderer*>(window->GetRenderer()));									// Clear Scene
+	SDL_SetRenderDrawColor(const_cast<SDL_Renderer*>(window->GetRenderer()), 0xFF, 0xFF, 0xFF, 0xFF);
 
-	bulletManager->DrawAllBullets(window->GetRenderer());
-	lineManager->DrawAllLines(window->GetRenderer());
+	this->m_bulletManager->DrawAll(window->GetRenderer());
+	this->m_wallManager->DrawAll(window->GetRenderer());
 
-	this->DrawScore(window->GetRenderer(), fps);
+	this->DrawFPS(window->GetRenderer());
 
-	SDL_RenderPresent(window->GetRenderer());
+	SDL_RenderPresent(const_cast<SDL_Renderer*>(window->GetRenderer()));								// paint all object
 }
 
 Game::State Game::GetState() const
 {
-	return state;
+	return m_state;
 }
