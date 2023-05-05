@@ -29,7 +29,7 @@ Game::Game(int elements_count) :
 
 	m_fps_rect = SDL_Rect{ 10, 10, 100, 120 };
 	m_fps_font = TTF_OpenFont("../data/fonts/OpenSans-Bold.ttf", 400);
-	if (m_fps_font == NULL)
+	if (m_fps_font == nullptr)
 	{
 		throw TTF_GetError();
 	}
@@ -54,7 +54,7 @@ void Game::DrawFPS(const SDL_Renderer* _renderer)
 	SDL_Surface* surfaceMessage = TTF_RenderText_Solid(m_fps_font, std::to_string(this->m_actualFPS).c_str(), SDL_Color{ 200, 200, 200, 255 });
 
 	SDL_Texture* Message = SDL_CreateTextureFromSurface(const_cast<SDL_Renderer*>(_renderer), surfaceMessage);
-	if (Message == NULL) {
+	if (Message == nullptr) {
 		throw SDL_GetError();
 	}
 
@@ -125,8 +125,8 @@ void Game::DrawAll()
 	SDL_RenderClear(const_cast<SDL_Renderer*>(window->GetRenderer()));									// Clear Scene
 	SDL_SetRenderDrawColor(const_cast<SDL_Renderer*>(window->GetRenderer()), 0xFF, 0xFF, 0xFF, 0xFF);
 
-	this->m_bulletManager->DrawAll(window->GetRenderer());
 	this->m_wallManager->DrawAll(window->GetRenderer());
+	this->m_bulletManager->DrawAll(window->GetRenderer());
 
 	this->DrawFPS(window->GetRenderer());
 

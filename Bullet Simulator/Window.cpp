@@ -13,14 +13,14 @@ Window::Window(short map_width, short map_height) :
 	this->m_sdl_window = SDL_CreateWindow("Bullet Simulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_map_width, m_map_height,
 		screen_width <= m_map_width && screen_height <= m_map_height ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_RESIZABLE
 	);
-	if (m_sdl_window == NULL) {
+	if (m_sdl_window == nullptr) {
 		throw SDL_GetError();
 	}
 
 	this->m_renderer = SDL_CreateRenderer(const_cast<SDL_Window*>(m_sdl_window), -1, SDL_RENDERER_ACCELERATED
 		//| SDL_RENDERER_PRESENTVSYNC //limit to 60/120 fps
 	);
-	if (m_renderer == NULL) {
+	if (m_renderer == nullptr) {
 		throw "Error at renderer create";
 	}
 }

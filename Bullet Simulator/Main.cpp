@@ -26,15 +26,13 @@ int main(int argc, char* argv[])
 	//	thr.detach();
 	//}
 
-
 	while (game.GetState() == Game::State::STATE_OK)
 	{
+		game.HandleEvents();
 		game.CalculateFPS();
 		game.Update();
-		game.HandleEvents();
 		game.DrawAll();
 	}
-
 
 	return 0;
 }
